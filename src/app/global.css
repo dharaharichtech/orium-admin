@@ -1,3 +1,26 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Custom colors */
+@theme {
+  /* Layout colors */
+  --color-layout-bg: #F9F9FC;
+  
+  /* Sidebar colors */
+  --color-sidebar-text: #747474;
+  --color-sidebar-gradient-start: #05A750;
+  --color-sidebar-gradient-end: #8AC53F;
+  
+  /* Text colors */
+  --color-text-primary: #111827;
+  --color-text-secondary: #6B7280;
+  --color-text-light: #9CA3AF;
+
+  /* Custom content colors */
+  --color-lore: #667085;
+  --color-dashboard: #777980;
+
+  /* Background colors */
+  --color-bg-white: #FFFFFF;
+  --color-bg-gray-50: #F9FAFB;
+  --color-bg-gray-100: #F3F4F6;
+}
