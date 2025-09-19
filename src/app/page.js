@@ -1,7 +1,8 @@
 "use client";
+
 import Customers from "@/components/customers/Customers";
 import Dashboard from "@/components/dashboard/Dashboard";
-import Orders from "@/components/dashboard/Orders";
+import Orders from "@/components/orders/Orders";
 import Product from "@/components/products/Product";
 import Sidebar from "@/components/sidebar/Sidebar";
 import React, { useState } from "react";
@@ -30,7 +31,7 @@ const Page = () => {
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       </aside>
 
-      <main className="flex-1 bg-layout-bg p-6">
+      <main className="flex-1 bg-layout-bg">
         {renderContent()}
       </main>
     </div>

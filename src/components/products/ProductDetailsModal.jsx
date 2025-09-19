@@ -25,7 +25,7 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-2xl p-6 relative">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-sidebar-gradient-start hover:text-gray-900"
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-900"
         >
           ✕
         </button>
@@ -34,27 +34,18 @@ const ProductDetailsModal = ({ open, onClose, product }) => {
           {product.title} - Details
         </h2>
 
-        <div className="space-y-2 ">
-          <AccordionItem 
-            title="What’s Inside the Box?"
-            content={product.details?.insideBox || "No data available"}
-          />
-          <AccordionItem
-            title="What are the Features?"
-            content={product.details?.features || "No data available"}
-          />
-          <AccordionItem
-            title="What are the Benefits of this product?"
-            content={product.details?.benefits || "No data available"}
-          />
-          <AccordionItem
-            title="How to Use this product?"
-            content={product.details?.usage || "No data available"}
-          />
-          <AccordionItem
-            title="Post-Cycle Tip"
-            content={product.details?.tip || "No data available"}
-          />
+        <div className="space-y-2">
+          {product.details && product.details.length > 0 ? (
+            product.details.map((item) => (
+              <AccordionItem
+                key={item._id}
+                title={item.product_que}
+                content={item.product_ans}
+              />
+            ))
+          ) : (
+            <p className="text-gray-500">No details available</p>
+          )}
         </div>
       </div>
     </div>

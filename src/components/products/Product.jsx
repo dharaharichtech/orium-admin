@@ -1,42 +1,49 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import {
-  Search,
-  Eye,
-  Edit,
-  Trash2,
-  Plus,
-} from "lucide-react";
+import { Search, Eye, Edit, Trash2, Plus } from "lucide-react";
 import { getAllProducts } from "@/api/productApi";
 import Image from "next/image";
 import ProductDetailsModal from "./ProductDetailsModal";
-
+import { useRouter } from "next/navigation";
+import ProductDetails from "./ProductDetails";
+import {
+  deleteProductById,
+  fetchAllProducts,
+  removeProduct,
+} from "@/redux/reducer/product/productSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 const Product = () => {
-  const [products, setProducts] = useState([]);
+  const router = useRouter();
+  const dispatch = useDispatch();
+  // const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [openModal, setOpenModal] = useState(false);
+  const [openDetailsModal, setOpenDetailsModal] = useState(false);
+  const [openViewModal, setOpenViewModal] = useState(false);
+  const { products, loading } = useSelector((state) => state.product);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [filterType, setFilterType] = useState(""); // 👈 NEW state
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
-  const handleOpenDetails = (product) => {
+  const handleOpenDetailsModal = (product) => {
     setSelectedProduct(product);
-    setOpenModal(true);
+    setOpenDetailsModal(true);
   };
 
+  // const handleOpenViewModal = (product) => {
+  //   setSelectedProduct(product);
+  //   setOpenViewModal(true);
+  // };
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const data = await getAllProducts();
-        setProducts(data);
-      } catch (error) {
-        console.error("Failed to fetch products", error);
-      }
-    };
-    fetchProducts();
-  }, []);
+    dispatch(fetchAllProducts());
+  }, [dispatch]);
 
   const handleSelectAll = () => {
     if (selectAll) {
@@ -71,11 +78,46 @@ const Product = () => {
     }
   };
 
-  const filteredProducts = products.filter(
+  // const filteredProducts = products.filter(
+  //   (p) =>
+  //     p.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     p.pro_id?.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
+  let filteredProducts = products.filter(
     (p) =>
       p.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.pro_id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (filterType === "available") {
+    filteredProducts = filteredProducts.filter((p) => p.stock > 0);
+  } else if (filterType === "title") {
+    filteredProducts = [...filteredProducts].sort((a, b) =>
+      a.title.localeCompare(b.title)
+    );
+  } else if (filterType === "date") {
+    filteredProducts = [...filteredProducts].sort(
+      (a, b) => new Date(b.date) - new Date(a.date)
+    );
+  }
+
+  const confirmDelete = async () => {
+    if (productToDelete) {
+      await dispatch(deleteProductById(productToDelete._id));
+      setShowDeleteModal(false);
+      setProductToDelete(null);
+    }
+  };
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 10;
+
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentProducts = filteredProducts.slice(
+    indexOfFirstProduct,
+    indexOfLastProduct
+  );
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -84,35 +126,45 @@ const Product = () => {
         <div className="flex items-center justify-between">
           <div>
             <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-              <span className="text-green-600">Dashboard</span>
+              <span
+                onClick={() => router.push("/dashboard")}
+                className="text-green-600 font-bold cursor-pointer"
+              >
+                Dashboard
+              </span>
               <span>›</span>
               <span className="text-gray-900">Product</span>
             </nav>
             <h1 className="text-2xl font-semibold text-gray-900">Product</h1>
           </div>
-          <button className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
+          <button
+            onClick={() => router.push("/dashboard/product/add")}
+            className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Add Product
           </button>
         </div>
       </div>
 
-      {/* Search and Filters */}
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <div className="relative w-64">
             <input
               type="text"
-              placeholder="Search product..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 w-64"
+              placeholder="Search products..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
             />
+            <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
           </div>
-          <div className="flex items-center space-x-3">
-            <button className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm">
-              {/* <Filter className="w-4 h-4 mr-2" /> */}
+
+          <div className="relative">
+            <button
+              onClick={() => setShowFilterDropdown((prev) => !prev)}
+              className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm"
+            >
               <Image
                 src="/icons/product/slider.svg"
                 alt="Filter"
@@ -122,6 +174,47 @@ const Product = () => {
               />
               Filters
             </button>
+
+            {showFilterDropdown && (
+              <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                <button
+                  onClick={() => {
+                    setFilterType("");
+                    setShowFilterDropdown(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                >
+                  All Products
+                </button>
+                <button
+                  onClick={() => {
+                    setFilterType("available");
+                    setShowFilterDropdown(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                >
+                  Available
+                </button>
+                <button
+                  onClick={() => {
+                    setFilterType("title");
+                    setShowFilterDropdown(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                >
+                  By Title
+                </button>
+                <button
+                  onClick={() => {
+                    setFilterType("date");
+                    setShowFilterDropdown(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                >
+                  By Date
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -167,7 +260,7 @@ const Product = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredProducts.map((product) => (
+              {currentProducts.map((product) => (
                 <tr key={product._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <input
@@ -192,22 +285,13 @@ const Product = () => {
                             className="h-10 w-10 rounded-lg object-cover"
                           />
                         ) : (
-                          {
-                            /* <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">
-                              O
-                            </span>
-                          </div> */
-                          }
+                          {}
                         )}
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">
                           {product.title}
                         </div>
-                        {/* <div className="text-sm text-gray-500 truncate max-w-[200px]">
-                          {product.description}
-                        </div> */}
                       </div>
                     </div>
                   </td>
@@ -219,7 +303,7 @@ const Product = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
-                      onClick={() => handleOpenDetails(product)}
+                      onClick={() => handleOpenDetailsModal(product)}
                       className="text-sm text-blue-600 hover:text-blue-800 bg-blue-50 rounded-l-4xl px-3 py-1"
                     >
                       See The Details
@@ -237,13 +321,30 @@ const Product = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-2">
-                      <button className="p-1 text-gray-400 hover:text-gray-600">
+                      <button
+                        onClick={() =>
+                          router.push(`/dashboard/product/${product._id}/view`)
+                        }
+                        className="p-1 text-gray-400 hover:text-gray-600"
+                      >
                         <Eye className="w-4 h-4" />
                       </button>
-                      <button className="p-1 text-gray-400 hover:text-gray-600">
+
+                      <button
+                        onClick={() =>
+                          router.push(`/dashboard/product/${product._id}/edit`)
+                        }
+                        className="p-1 text-gray-400 hover:text-gray-600"
+                      >
                         <Edit className="w-4 h-4" />
                       </button>
-                      <button className="p-1 text-gray-400 hover:text-gray-600">
+                      <button
+                        onClick={() => {
+                          setProductToDelete(product);
+                          setShowDeleteModal(true);
+                        }}
+                        className="p-1 text-gray-400 hover:text-gray-600"
+                      >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -251,28 +352,86 @@ const Product = () => {
                 </tr>
               ))}
             </tbody>
-
-       <ProductDetailsModal
-  open={openModal}
-  onClose={() => setOpenModal(false)}
-  product={selectedProduct}
-/>
-
           </table>
         </div>
 
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-96 text-center relative">
+              <button
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                <div className="w-5 h-5">✕</div>
+              </button>
+
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                  <Trash2 className="w-8 h-8 text-red-500" />
+                </div>
+              </div>
+
+              <h2 className="text-lg font-semibold text-gray-900">
+                Delete Product
+              </h2>
+              <p className="text-sm text-gray-500 mt-2">
+                Do you want to delete this product? This action can’t be undone.
+              </p>
+
+              <div className="flex justify-between mt-6 space-x-4">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <ProductDetailsModal
+          open={openDetailsModal}
+          onClose={() => setOpenDetailsModal(false)}
+          product={selectedProduct}
+        />
+
         <div className="bg-white px-6 py-3 border-t border-gray-200 flex items-center justify-between">
           <div className="text-sm text-gray-700">
-            Showing 1-{products.length} from {products.length}
+            Showing {indexOfFirstProduct + 1}-
+            {Math.min(indexOfLastProduct, filteredProducts.length)} of{" "}
+            {filteredProducts.length}
           </div>
           <div className="flex items-center space-x-2">
-            <button className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700"
+            >
               ‹
             </button>
-            <button className="px-3 py-2 text-sm bg-gray-900 text-white rounded">
-              1
-            </button>
-            <button className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-2 text-sm ${
+                  currentPage === i + 1
+                    ? "bg-gray-900 text-white rounded"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700"
+            >
               ›
             </button>
           </div>
