@@ -38,3 +38,17 @@ export const loginUserApi = async (email, password) => {
     throw error.response?.data || error;
   }
 };
+
+
+export const verifyTokenApi = async (token) => {
+  try {
+    const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/verify-token`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.data;
+  } catch (err) {
+    return { valid: false };
+  }
+};

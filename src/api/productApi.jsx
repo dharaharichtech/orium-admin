@@ -1,3 +1,4 @@
+import axios from "axios";
 import baseApi from "./baseApi";
 
 
@@ -20,6 +21,18 @@ export const getAllProducts = async () => {
   }
 };
 
+
+// export const getAllProducts = async () => {
+//   try {
+//     const response = await axios.get("http://demo.harichtech.com/api/product/getall",{
+//        withCredentials: true, 
+//     });
+//     return response.data;
+//   } catch (error) {
+//     console.error("Error fetching products directly:", error);
+//     throw error;
+//   }
+// };
 
 export const getProductById = async (id) => {
   try {

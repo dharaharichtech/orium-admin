@@ -1,21 +1,44 @@
 "use client";
 
-import { Calendar, Eye, Filter, Trash2, Package, Truck, CheckCircle, XCircle } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import {
+  Calendar,
+  Eye,
+  Filter,
+  Trash2,
+  Package,
+  Truck,
+  CheckCircle,
+  XCircle,
+  ChevronDown,
+} from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchOrders } from "@/redux/reducer/order/orderSlice";
+import {
+  fetchOrders,
+  updateOrderStatusAsync,
+  updateOrderStatusThunk,
+} from "@/redux/reducer/order/orderSlice";
 
-const Orders = ({ orders: propOrders, showViewIcon = true, showHeader = true, showStatus=true, showTime=true }) => {
+const Orders = ({
+  orders: propOrders,
+  showViewIcon = true,
+  showHeader = true,
+  showStatus = true,
+  showTime = true,
+}) => {
   const dispatch = useDispatch();
   const router = useRouter();
-  
+
   const { orders, loading, error } = useSelector((state) => state.order);
-  
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [activeTimeFilter, setActiveTimeFilter] = useState("All Date");
+  const [dropdownOpen, setDropdownOpen] = useState(null);
+  const dropdownRef = useRef(null);
+  const statusOptions = ["pending", "paid", "failed", "shipped"];
 
   const handleDeleteClick = (order) => {
     setSelectedOrder(order);
@@ -48,60 +71,76 @@ const Orders = ({ orders: propOrders, showViewIcon = true, showHeader = true, sh
 
   const getFilteredOrders = () => {
     if (!ordersToShow || ordersToShow.length === 0) return [];
-    
+
     const now = new Date();
-  
-    
-    switch(activeTimeFilter) {
+
+    switch (activeTimeFilter) {
       case "All Date":
         console.log("Showing all orders");
         return ordersToShow;
-      
+
       case "12 Months":
         const twelveMonthsAgo = new Date();
         twelveMonthsAgo.setFullYear(now.getFullYear() - 1);
-        const filtered12 = ordersToShow.filter(order => {
+        const filtered12 = ordersToShow.filter((order) => {
           if (!order.createdAt) return false;
           const orderDate = new Date(order.createdAt);
           return orderDate >= twelveMonthsAgo;
         });
         // console.log("12 months filter - cutoff:", twelveMonthsAgo, "filtered count:", filtered12.length);
         return filtered12;
-      
+
       case "30 Days":
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(now.getDate() - 30);
-        const filtered30 = ordersToShow.filter(order => {
+        const filtered30 = ordersToShow.filter((order) => {
           if (!order.createdAt) return false;
           const orderDate = new Date(order.createdAt);
           return orderDate >= thirtyDaysAgo;
         });
         // console.log("30 days filter - cutoff:", thirtyDaysAgo, "filtered count:", filtered30.length);
         return filtered30;
-      
+
       case "7 Days":
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(now.getDate() - 7);
-        const filtered7 = ordersToShow.filter(order => {
+        const filtered7 = ordersToShow.filter((order) => {
           if (!order.createdAt) return false;
           const orderDate = new Date(order.createdAt);
           return orderDate >= sevenDaysAgo;
         });
-        console.log("7 days filter - cutoff:", sevenDaysAgo, "filtered count:", filtered7.length);
+        console.log(
+          "7 days filter - cutoff:",
+          sevenDaysAgo,
+          "filtered count:",
+          filtered7.length
+        );
         return filtered7;
-      
+
       case "24 Hour":
         const twentyFourHoursAgo = new Date();
-        twentyFourHoursAgo.setTime(now.getTime() - (24 * 60 * 60 * 1000)); // 24 hours in milliseconds
-        const filtered24 = ordersToShow.filter(order => {
+        twentyFourHoursAgo.setTime(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours in milliseconds
+        const filtered24 = ordersToShow.filter((order) => {
           if (!order.createdAt) return false;
           const orderDate = new Date(order.createdAt);
-          console.log("Order date:", orderDate, "Cutoff:", twentyFourHoursAgo, "Is valid:", orderDate >= twentyFourHoursAgo);
+          console.log(
+            "Order date:",
+            orderDate,
+            "Cutoff:",
+            twentyFourHoursAgo,
+            "Is valid:",
+            orderDate >= twentyFourHoursAgo
+          );
           return orderDate >= twentyFourHoursAgo;
         });
-        console.log("24 hours filter - cutoff:", twentyFourHoursAgo, "filtered count:", filtered24.length);
+        console.log(
+          "24 hours filter - cutoff:",
+          twentyFourHoursAgo,
+          "filtered count:",
+          filtered24.length
+        );
         return filtered24;
-      
+
       default:
         return ordersToShow;
     }
@@ -114,23 +153,23 @@ const Orders = ({ orders: propOrders, showViewIcon = true, showHeader = true, sh
       processing: 0,
       shipped: 0,
       delivered: 0,
-      cancelled: 0
+      cancelled: 0,
     };
 
-    filteredOrders.forEach(order => {
-      switch(order.status?.toLowerCase()) {
-        case 'processing':
-        case 'pending':
+    filteredOrders.forEach((order) => {
+      switch (order.status?.toLowerCase()) {
+        case "processing":
+        case "pending":
           stats.processing++;
           break;
-        case 'shipped':
+        case "shipped":
           stats.shipped++;
           break;
-        case 'delivered':
-        case 'paid':
+        case "delivered":
+        case "paid":
           stats.delivered++;
           break;
-        case 'cancelled':
+        case "cancelled":
           stats.cancelled++;
           break;
         default:
@@ -140,20 +179,54 @@ const Orders = ({ orders: propOrders, showViewIcon = true, showHeader = true, sh
 
     return stats;
   };
-
   const stats = getOrderStats();
 
+  const getStatusClasses = (status) => {
+    switch (status?.toLowerCase()) {
+      case "paid":
+      case "delivered":
+        return "bg-green-100 text-green-800";
+      case "shipped":
+        return "bg-blue-100 text-blue-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      case "pending":
+      case "processing":
+        return "bg-orange-100 text-orange-800";
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
+  };
+
+  const getAvailableStatusOptions = (currentStatus) => {
+    const options = ["pending", "paid", "failed", "shipped", "cancelled"];
+    return options.filter((status) => status !== currentStatus?.toLowerCase());
+  };
+
+  const toggleDropdown = (orderId) => {
+    setDropdownOpen(dropdownOpen === orderId ? null : orderId);
+  };
+  
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
     });
   };
-  
+
   const timeFilters = ["All Date", "12 Months", "30 Days", "7 Days", "24 Hour"];
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      await dispatch(updateOrderStatusAsync(orderId, newStatus));
+      setDropdownOpen(null);
+    } catch (err) {
+      console.error("Failed to update status", err);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -184,93 +257,105 @@ const Orders = ({ orders: propOrders, showViewIcon = true, showHeader = true, sh
         </div>
       )}
       {showStatus && (
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Processing</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.processing.toLocaleString()}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Processing
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.processing.toLocaleString()}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                <Package className="w-6 h-6 text-orange-600" />
+              </div>
             </div>
-            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-              <Package className="w-6 h-6 text-orange-600" />
+          </div>
+
+          {/* Shipped */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Shipped
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.shipped.toLocaleString()}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <Truck className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Delivered
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.delivered.toLocaleString()}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-teal-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Cancelled
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.cancelled.toLocaleString()}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <XCircle className="w-6 h-6 text-red-600" />
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Shipped */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Shipped</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.shipped.toLocaleString()}</p>
-            </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <Truck className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Delivered</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.delivered.toLocaleString()}</p>
-            </div>
-            <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-teal-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Cancelled</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.cancelled.toLocaleString()}</p>
-            </div>
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-              <XCircle className="w-6 h-6 text-red-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
       )}
 
       {showTime && (
- <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-1">
-            {timeFilters.map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setActiveTimeFilter(filter)}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  activeTimeFilter === filter
-                    ? "bg-gray-100 text-gray-900"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center space-x-3">
-            {/* <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-1">
+              {timeFilters.map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setActiveTimeFilter(filter)}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    activeTimeFilter === filter
+                      ? "bg-gray-100 text-gray-900"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center space-x-3">
+              {/* <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50">
               <Calendar className="w-4 h-4" />
               <span className="text-sm">Select Dates</span>
             </button> */}
-            <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50">
-              <Filter className="w-4 h-4" />
-              <span className="text-sm">Filters</span>
-            </button>
+              <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50">
+                <Filter className="w-4 h-4" />
+                <span className="text-sm">Filters</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
       )}
-     
-
-     
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-100">
         <div className="overflow-x-auto">
@@ -303,7 +388,10 @@ const Orders = ({ orders: propOrders, showViewIcon = true, showHeader = true, sh
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+                  <td
+                    colSpan="7"
+                    className="px-6 py-4 text-center text-gray-500"
+                  >
                     No orders found for the selected time period
                   </td>
                 </tr>
@@ -355,10 +443,15 @@ const Orders = ({ orders: propOrders, showViewIcon = true, showHeader = true, sh
                           {formatDate(order.createdAt)}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {order.createdAt ? new Date(order.createdAt).toLocaleTimeString('en-IN', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          }) : ''}
+                          {order.createdAt
+                            ? new Date(order.createdAt).toLocaleTimeString(
+                                "en-IN",
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )
+                            : ""}
                         </div>
                       </td>
 
@@ -374,7 +467,7 @@ const Orders = ({ orders: propOrders, showViewIcon = true, showHeader = true, sh
                         </div>
                       </td>
 
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      {/* <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                             order.status === "paid" || order.status === "delivered"
@@ -388,6 +481,40 @@ const Orders = ({ orders: propOrders, showViewIcon = true, showHeader = true, sh
                         >
                           {order.status}
                         </span>
+                      </td> */}
+
+                      {/* Status Dropdown */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="relative" ref={dropdownRef}>
+                          <button
+                            onClick={() => toggleDropdown(order._id)}
+                            className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full cursor-pointer hover:opacity-80 transition-opacity ${getStatusClasses(
+                              order.status
+                            )}`}
+                          >
+                            {order.status}
+                            <ChevronDown className="w-3 h-3 ml-1" />
+                          </button>
+
+                          {dropdownOpen === order._id && (
+                            <div className="absolute z-10 mt-2 w-32 bg-white rounded-md shadow-lg border border-gray-100">
+                              {getAvailableStatusOptions(order.status).map(
+                                (status) => (
+                                  <button
+                                    key={status}
+                                    onClick={() =>
+                                      handleStatusChange(order._id, status)
+                                    }
+                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                  >
+                                    {status.charAt(0).toUpperCase() +
+                                      status.slice(1)}
+                                  </button>
+                                )
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </td>
 
                       <td className="px-6 py-4 whitespace-nowrap">

@@ -6,7 +6,10 @@ import Image from "next/image";
 import CustomerDetail from "./CustomerDetail";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCustomers } from "@/redux/reducer/user/userSlice";
+import {
+  fetchCustomers,
+  updateCustomerStatus,
+} from "@/redux/reducer/user/userSlice";
 
 const Customers = () => {
   const [selectedCustomers, setSelectedCustomers] = useState([]);
@@ -21,7 +24,7 @@ const Customers = () => {
 
   const [search, setSearch] = useState("");
 
-  const baseUrl = process.env.API_BASE_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   const dispatch = useDispatch();
   const { customers, loading, total } = useSelector((state) => state.user);
@@ -52,16 +55,21 @@ const Customers = () => {
     setOpenPopup(openPopup === customerId ? null : customerId);
   };
 
-  const handleStatusChange = (id, newStatus) => {
-    setCustomers((prev) =>
-      prev.map((c) => (c._id === id ? { ...c, status: newStatus } : c))
-    );
-    setOpenPopup(null);
+  // const handleStatusChange = (id, newStatus) => {
+  //   setCustomers((prev) =>
+  //     prev.map((c) => (c._id === id ? { ...c, status: newStatus } : c))
+  //   );
+  //   setOpenPopup(null);
 
-    if (openCustomerId === id) {
-      setOpenCustomerId(null);
-      setTimeout(() => setOpenCustomerId(id), 0);
-    }
+  //   if (openCustomerId === id) {
+  //     setOpenCustomerId(null);
+  //     setTimeout(() => setOpenCustomerId(id), 0);
+  //   }
+  // };
+
+  const handleStatusChange = (id, newStatus) => {
+    dispatch(updateCustomerStatus({ id, status: newStatus }));
+    setOpenPopup(null);
   };
 
   useEffect(() => {
@@ -151,7 +159,6 @@ const Customers = () => {
           </div>
         </div>
       </div>
-
 
       {/* Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -274,7 +281,9 @@ const Customers = () => {
                             className={
                               customer.status === "Active"
                                 ? "text-green-600"
-                                : "text-red-600"
+                                : customer.status === "Blocked"
+                                ? "text-red-600"
+                                : "text-yellow-600"
                             }
                           />
                         </button>

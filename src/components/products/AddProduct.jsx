@@ -486,7 +486,7 @@ const handleDetailsSubmit = async () => {
                 />
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm border-gray-50 p-6">
+              {/* <div className="bg-white rounded-lg shadow-sm border-gray-50 p-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">
                   Status
                 </h2>
@@ -502,7 +502,7 @@ const handleDetailsSubmit = async () => {
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
-              </div>
+              </div> */}
 
               <div className="bg-white rounded-lg shadow-sm border-gray-50 p-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">

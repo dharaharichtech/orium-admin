@@ -1,12 +1,13 @@
 import axios from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api";
+const NEXT_PUBLIC_API_BASE_URL = "https://demo.harichtech.com/api"
 
 const baseApi = axios.create({
-  baseURL: API_BASE_URL, 
+  baseURL: NEXT_PUBLIC_API_BASE_URL, 
   headers: {
     "Content-Type": "application/json",
   },
+   maxRedirects: 0, 
 });
 
 export default baseApi;

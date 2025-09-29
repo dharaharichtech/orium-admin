@@ -1,7 +1,7 @@
 "use client"
 
 import { createSlice } from "@reduxjs/toolkit";
-import { getAllOrders, getOrderById } from "@/api/orderApi";
+import { getAllOrders, getOrderById, updateOrderStatusAPI } from "@/api/orderApi";
 
 const initialState = {
   loading: false,
@@ -35,10 +35,23 @@ const orderSlice = createSlice({
     clearOrderDetail(state) {
       state.orderDetail = null;
     },
+  updateOrderStatus(state, action) {
+      state.loading = false;
+      const { orderId, status } = action.payload;
+      const orderIndex = state.orders.findIndex(
+        (order) => order._id === orderId
+      );
+      if (orderIndex !== -1) {
+        state.orders[orderIndex].status = status;
+      }
+      if (state.orderDetail && state.orderDetail._id === orderId) {
+        state.orderDetail.status = status;
+      }
+    },
   },
 });
 
-export const { startLoading, setError, setOrders, setOrderDetail, clearOrderDetail } = orderSlice.actions;
+export const { startLoading, setError, setOrders, setOrderDetail, clearOrderDetail , updateOrderStatus } = orderSlice.actions;
 export default orderSlice.reducer;
 
 export const fetchOrders = (page = 1, limit = 10) => async (dispatch) => {
@@ -92,3 +105,14 @@ export const fetchOrderById = (orderId) => async (dispatch) => {
     dispatch(setError("Failed to fetch order details"));
   }
 };
+
+export const updateOrderStatusAsync = (orderId, status) => async (dispatch) => {
+  try {
+    dispatch(startLoading());
+    await updateOrderStatusAPI(orderId, status); 
+    dispatch(updateOrderStatus({ orderId, status })); 
+  } catch (err) {
+    dispatch(setError("Failed to update order status"));
+  }
+};
+

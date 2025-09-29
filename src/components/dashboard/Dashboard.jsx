@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { getAllProducts } from "@/api/productApi";
 import { getAllUsers } from "@/api/authApi";
 import { useSelector, useDispatch } from "react-redux";
-import { logout } from "@/redux/reducer/user/userSlice";
+import { logout, verifyToken } from "@/redux/reducer/user/userSlice";
 
 export default function Dashboard() {
   const [selectedDate, setSelectedDate] = useState("");
@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [productsCount, setProductsCount] = useState(0);
   const [ordersCount, setOrdersCount] = useState(0);
   const [customersCount, setCustomersCount] = useState(0);
+  const isTokenValid = useSelector((state) => state.user.isTokenValid);
 
   const router = useRouter();
   const dispatch = useDispatch();
@@ -27,8 +28,6 @@ export default function Dashboard() {
   const userInfo = useSelector((state) => state.user.userInfo);
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-    
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -89,8 +88,7 @@ export default function Dashboard() {
     fetchDashboardData();
   }, []);
 
-
-   useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setMenuOpen(false);
@@ -106,10 +104,24 @@ export default function Dashboard() {
     router.push("/login");
   };
 
+  useEffect(() => {
+    if (token) {
+      dispatch(verifyToken());
+      const interval = setInterval(() => dispatch(verifyToken()), 1800000);
+      return () => clearInterval(interval);
+    }
+  }, [token, dispatch]);
+
+  useEffect(() => {
+    if (token && isTokenValid === false) {
+      handleLogout();
+    }
+  }, [isTokenValid, token]);
+
   return (
     <>
       <div className="min-h-screen bg-layout-bg p-10">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-8 relative">
           <div>
             <h1 className="text-3xl font-bold text-text-primary mb-2">
               Welcome Back {userInfo?.firstname || "Admin"}{" "}
@@ -118,39 +130,62 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center space-x-3">
-            <div 
-              onClick={() => setMenuOpen(!menuOpen)}
-            className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center">
-              <span className="text-white font-semibold text-sm">
-                {userInfo?.firstname?.[0] || "A"}{" "}
-              </span>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-text-primary">
-                {userInfo?.firstname} {userInfo?.lastname}{" "}
-              </p>
-              <p className="text-xs text-text-secondary">
-                {userInfo?.role || "Admin"}
-              </p>
-            </div>
-              {menuOpen && (
-              <div className="absolute right-0 top-12 w-40 bg-white rounded-xl shadow-lg border border-gray-100 z-50">
-                <div className="px-4 py-2 border-b">
-                  <p className="text-sm font-medium text-gray-800">
+            {token && isTokenValid && userInfo ? (
+              <>
+                {/* Avatar */}
+                <div
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="w-10 h-10 bg-gradient-to-r from-orange-400 to-pink-500 rounded-full flex items-center justify-center cursor-pointer"
+                >
+                  <span className="text-white font-semibold text-sm">
+                    {userInfo?.firstname?.[0] || "A"}
+                  </span>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-text-primary">
                     {userInfo?.firstname} {userInfo?.lastname}
                   </p>
-                  {/* <p className="text-xs text-gray-500">
+                  <p className="text-xs text-text-secondary">
                     {userInfo?.role || "Admin"}
-                  </p> */}
+                  </p>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 rounded-b-xl"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
+
+                {menuOpen && (
+                  <div className="absolute right-0 top-14 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900">
+                        {userInfo?.firstname} {userInfo?.lastname}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {userInfo?.role || "Admin"}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => router.push("/profile")}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      View Profile
+                    </button>
+
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 rounded-b-xl"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : isTokenValid === false ? (
+              <button
+                onClick={() => router.push("/login")}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+              >
+                Login
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -257,7 +292,13 @@ export default function Dashboard() {
 
               {/* Orders list */}
               {recentOrders.length > 0 ? (
-             <Orders orders={recentOrders} showViewIcon={true} showHeader={false} showStatus={false} showTime={false} />
+                <Orders
+                  orders={recentOrders}
+                  showViewIcon={true}
+                  showHeader={false}
+                  showStatus={false}
+                  showTime={false}
+                />
               ) : (
                 <p className="text-gray-500">No recent orders found.</p>
               )}

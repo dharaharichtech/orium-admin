@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from "react";
 import { ChevronDown, Star } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
-import { getProductById } from "@/api/productApi"; 
+import { getProductById } from "@/api/productApi";
 
 const ProductDetails = ({ product }) => {
   const params = useParams();
-  const productId = product?. _id || params?.id; 
+  const productId = product?._id || params?.id;
   const [activeImage, setActiveImage] = useState(0);
   const [expandedSections, setExpandedSections] = useState({});
   const [loading, setLoading] = useState(!product);
@@ -19,7 +19,7 @@ const ProductDetails = ({ product }) => {
         try {
           setLoading(true);
           const res = await getProductById(productId);
-          setProductData(res); 
+          setProductData(res);
         } catch (err) {
           console.error("Failed to fetch product:", err);
         } finally {
@@ -30,8 +30,10 @@ const ProductDetails = ({ product }) => {
     }
   }, [product, productId]);
 
-  if (loading) return <div className="p-6 text-gray-500">Loading product details...</div>;
-  if (!productData) return <div className="p-6 text-red-500">Product not found</div>;
+  if (loading)
+    return <div className="p-6 text-gray-500">Loading product details...</div>;
+  if (!productData)
+    return <div className="p-6 text-red-500">Product not found</div>;
 
   const toggleSection = (section) => {
     setExpandedSections((prev) => ({
@@ -89,10 +91,16 @@ const ProductDetails = ({ product }) => {
                   key={index}
                   onClick={() => setActiveImage(index)}
                   className={`w-16 h-16 rounded-lg overflow-hidden object-contain border-2 ${
-                    activeImage === index ? "border-green-500" : "border-gray-200"
+                    activeImage === index
+                      ? "border-green-500"
+                      : "border-gray-200"
                   }`}
                 >
-                  <img src={img.url} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
+                  <img
+                    src={img.url}
+                    alt={`Thumbnail ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
                 </button>
               ))}
             </div>
@@ -112,7 +120,9 @@ const ProductDetails = ({ product }) => {
 
           <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
             <div className="flex justify-between items-start">
-              <h1 className="text-2xl font-semibold text-gray-900">{prod.title}</h1>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                {prod.title}
+              </h1>
               {/* <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
                 {prod.status || "Published"}
               </span> */}
@@ -120,40 +130,56 @@ const ProductDetails = ({ product }) => {
 
             <div className="flex items-center space-x-6 text-sm text-gray-600">
               <span>
-                Sold: <span className="font-medium text-gray-900">{prod.sold || 0}</span>
+                Sold:{" "}
+                <span className="font-medium text-gray-900">
+                  {prod.sold || 0}
+                </span>
               </span>
               <div className="flex items-center space-x-1">
                 <span>Rating:</span>
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                <span className="font-medium text-gray-900">{prod.rating || "4.5/5"}</span>
+                <span className="font-medium text-gray-900">
+                  {prod.rating || "4.5/5"}
+                </span>
               </div>
               <span>
-                Stock: <span className="font-medium text-gray-900">{prod.stock}</span>
+                Stock:{" "}
+                <span className="font-medium text-gray-900">{prod.stock}</span>
               </span>
             </div>
 
-            <div className="text-3xl font-bold text-gray-900">₹ {prod.price}</div>
+            <div className="text-3xl font-bold text-gray-900">
+              ₹ {prod.price}
+            </div>
 
             {/* Details */}
             {prod.details?.length > 0 && (
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Product Details :</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Product Details :
+                </h3>
                 {prod.details.map((detail, idx) => (
                   <div key={idx} className="border border-gray-200 rounded-lg">
                     <button
                       onClick={() => toggleSection(detail.product_que)}
                       className="w-full px-4 py-3 flex justify-between items-center text-left hover:bg-gray-50"
                     >
-                      <span className="text-gray-700">{detail.product_que}</span>
+                      <span className="text-gray-700">
+                        {detail.product_que}
+                      </span>
                       <ChevronDown
                         className={`w-5 h-5 text-gray-400 transform transition-transform ${
-                          expandedSections[detail.product_que] ? "rotate-180" : ""
+                          expandedSections[detail.product_que]
+                            ? "rotate-180"
+                            : ""
                         }`}
                       />
                     </button>
                     {expandedSections[detail.product_que] && (
                       <div className="px-4 pb-3 border-t border-gray-200">
-                        <p className="text-gray-600 text-sm">{detail.product_ans}</p>
+                        <p className="text-gray-600 text-sm">
+                          {detail.product_ans}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -165,12 +191,23 @@ const ProductDetails = ({ product }) => {
             {prod.certificates?.length > 0 && (
               <div className="space-y-8">
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-gray-600">Certifications & Commitment to Quality</h3>
+                  <h3 className="text-lg font-medium text-gray-600">
+                    Certifications & Commitment to Quality
+                  </h3>
                   <div className="p-4 rounded-lg flex flex-wrap gap-6">
                     {prod.certificates.map((cert, index) => (
-                      <div key={index} className="flex flex-col items-center text-center">
-                        <img src={cert.certificate_img} alt={cert.certificate_title} className="w-32 h-32 rounded-lg object-contain bg-white mb-2" />
-                        <span className="text-xs font-medium text-black">{cert.certificate_title}</span>
+                      <div
+                        key={index}
+                        className="flex flex-col items-center text-center"
+                      >
+                        <img
+                          src={cert.certificate_img}
+                          alt={cert.certificate_title}
+                          className="w-32 h-32 rounded-lg object-contain bg-white mb-2"
+                        />
+                        <span className="text-xs font-medium text-black">
+                          {cert.certificate_title}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -178,22 +215,37 @@ const ProductDetails = ({ product }) => {
               </div>
             )}
 
-         {prod.certificates?.length > 0 && (
+            {/* SDG Goals */}
+            {prod.certificates?.some(
+              (cert) => cert.sdg_title && cert.sdg_img
+            ) && (
               <div className="space-y-8">
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-gray-600">SDG Goals</h3>
+                  <h3 className="text-lg font-medium text-gray-600">
+                    SDG Goals
+                  </h3>
                   <div className="p-4 rounded-lg flex flex-wrap gap-6">
-                    {prod.certificates.map((cert, index) => (
-                      <div key={index} className="flex flex-col items-center text-center">
-                        <img src={cert.sdg_img} alt={cert.sdg_title} className="w-32 h-32 rounded-lg object-contain bg-white mb-2" />
-                        <span className="text-xs font-medium text-black">{cert.sdg_title}</span>
-                      </div>
-                    ))}
+                    {prod.certificates
+                      .filter((cert) => cert.sdg_title && cert.sdg_img) // only valid ones
+                      .map((cert, index) => (
+                        <div
+                          key={index}
+                          className="flex flex-col items-center text-center"
+                        >
+                          <img
+                            src={cert.sdg_img}
+                            alt={cert.sdg_title}
+                            className="w-32 h-32 rounded-lg object-contain bg-white mb-2"
+                          />
+                          <span className="text-xs font-medium text-black">
+                            {cert.sdg_title}
+                          </span>
+                        </div>
+                      ))}
                   </div>
                 </div>
               </div>
             )}
-            
 
             {/* Footer */}
             <div className="flex justify-between items-center pt-6 border-t border-gray-200 text-sm text-gray-600">

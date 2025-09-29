@@ -12,7 +12,7 @@ const CustomerDetail = ({ customerId }) => {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
 
-  const API_BASE_URL = process.env.API_BASE_URL;
+  const NEXT_PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   useEffect(() => {
     if (customerId) {
@@ -49,6 +49,16 @@ const CustomerDetail = ({ customerId }) => {
     "U"
   ).toUpperCase();
 
+  const displayStatus = customer.status || (customer.isBlocked === 1 ? "Active" : "Blocked");
+  
+ const getStatusColor = (status) => {
+    if (status === "Active") return "bg-green-100 text-green-700";
+    if (status === "Blocked") return "bg-red-100 text-red-700";
+    if (status === "Deactive") return "bg-yellow-100 text-yellow-700";
+    return "bg-gray-100 text-gray-700";
+  };
+
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -78,14 +88,19 @@ const CustomerDetail = ({ customerId }) => {
             <p className="text-gray-500">{customer.phone}</p>
           </div>
         </div>
-        <span
+        {/* <span
           className={`inline-flex items-center px-4 py-1 rounded-md text-sm font-medium ${
             customer.isBlocked
-              ? "bg-red-100 text-red-700"
-              : "bg-green-100 text-green-700"
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700"
           }`}
         >
-          {customer.isBlocked ? "Blocked" : "Active"}
+          {customer.isBlocked ? "Active" : "Blocked"}
+        </span> */}
+         <span
+          className={`inline-flex items-center px-4 py-1 rounded-md text-sm font-medium ${getStatusColor(displayStatus)}`}
+        >
+          {displayStatus}
         </span>
       </div>
 
@@ -160,7 +175,7 @@ const CustomerDetail = ({ customerId }) => {
                     const imageUrl = product?.images?.[0]?.url
                       ? product.images[0].url.startsWith("http")
                         ? product.images[0].url
-                        : `${API_BASE_URL}${product.images[0].url}`
+                        : `${NEXT_PUBLIC_API_BASE_URL}${product.images[0].url}`
                       : "/placeholder.png";
 
                     return (
@@ -212,3 +227,4 @@ const CustomerDetail = ({ customerId }) => {
 };
 
 export default CustomerDetail;
+
