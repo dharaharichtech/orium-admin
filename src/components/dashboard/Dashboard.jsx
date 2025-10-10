@@ -26,8 +26,17 @@ export default function Dashboard() {
   const dropdownRef = useRef(null);
 
   const userInfo = useSelector((state) => state.user.userInfo);
+  // const token =
+  //   typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
+useEffect(() => {
+  if (typeof window !== "undefined") {
+    console.log("Stored Token:", localStorage.getItem("token"));
+  }
+}, []);
+
 
   useEffect(() => {
     const fetchOrders = async () => {

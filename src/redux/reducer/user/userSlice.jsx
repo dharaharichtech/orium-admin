@@ -82,10 +82,9 @@ export const loginUser = (email, password) => async (dispatch) => {
 
     const res = await loginUserApi(email, password);
 
-    if (res.token) {
+   if (typeof window !== "undefined" && res.token) {
       localStorage.setItem("token", res.token);
     }
-
     dispatch(setUserInfo(res.user || res));
     return res;
   } catch (err) {
