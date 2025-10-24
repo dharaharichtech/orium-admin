@@ -23,6 +23,7 @@ const Customers = () => {
   const [limit] = useState(10);
 
   const [search, setSearch] = useState("");
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "") || "";
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -238,7 +239,9 @@ const Customers = () => {
                           {customer.avatar &&
                           customer.avatar.startsWith("http") ? (
                             <Image
-                              src={customer.avatar}
+                               src={`${apiBase}${customer.avatar}`}
+                              // src={customer.avatar}
+                              
                               alt={customer.name}
                               width={32}
                               height={32}

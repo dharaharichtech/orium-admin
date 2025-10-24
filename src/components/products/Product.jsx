@@ -119,6 +119,8 @@ const Product = () => {
   );
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "") || "";
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -278,7 +280,8 @@ const Product = () => {
                       <div className="flex-shrink-0 h-10 w-10">
                         {product.images?.length > 0 ? (
                           <Image
-                            src={product.images[0].url}
+                            // src={product.images[0].url}
+                             src={`${apiBase}${product.images[0].url}`}
                             alt={product.title}
                             width={40}
                             height={40}

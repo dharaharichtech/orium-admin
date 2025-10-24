@@ -39,6 +39,7 @@ const Orders = ({
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const dropdownRef = useRef(null);
   const statusOptions = ["pending", "paid", "failed", "shipped"];
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "") || "";
 
   const handleDeleteClick = (order) => {
     setSelectedOrder(order);
@@ -406,7 +407,8 @@ const Orders = ({
                           <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center">
                             {order.product_id?.images?.length > 0 ? (
                               <Image
-                                src={order.product_id.images[0].url}
+                                // src={order.product_id.images[0].url}
+                                 src={`${apiBase}${order.product_id.images[0].url}`}
                                 alt={order.product_id.title}
                                 width={40}
                                 height={40}
