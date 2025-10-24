@@ -168,6 +168,8 @@ const EditProduct = ({ productId }) => {
   if (loading) return <p className="p-6">Loading...</p>;
   if (error) return <p className="p-6 text-red-500">{error}</p>;
 
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "") || "";
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -336,7 +338,8 @@ const EditProduct = ({ productId }) => {
                     <div className="relative w-24 h-24 mx-auto bg-green-100 group rounded-md overflow-hidden">
                       {cert.certificate_img ? (
                         <img
-                          src={cert.certificate_img}
+                          // src={cert.certificate_img}
+                           src={`${apiBase}${cert.certificate_img}`}
                           alt={cert.certificate_title}
                           className="w-full h-full object-cover"
                         />
@@ -444,7 +447,8 @@ const EditProduct = ({ productId }) => {
                     <div className="relative w-24 h-24 mx-auto bg-green-100 group rounded-md overflow-hidden">
                       {cert.sdg_img ? (
                         <img
-                          src={cert.sdg_img}
+                          // src={cert.sdg_img}
+                           src={`${apiBase}${cert.sdg_img}`}
                           alt={cert.sdg_title}
                           className="w-full h-full object-cover"
                         />

@@ -206,8 +206,6 @@ export const fetchCustomerById = (id) => async (dispatch, getState) => {
 
 export const verifyToken = () => async (dispatch) => {
   try {
-    dispatch(startLoading());
-
     const token = localStorage.getItem("token");
     if (!token) {
       dispatch(setTokenValid(false));
@@ -215,24 +213,52 @@ export const verifyToken = () => async (dispatch) => {
       return;
     }
 
-    const res = await verifyTokenApi(token); 
+    const res = await verifyTokenApi(token);
+
     if (res?.user) {
       dispatch(setTokenValid(true));
+      dispatch(
+        setUserInfo({
+          _id: res.user.userId,
+          role: "Admin",
+          issuedAt: res.user.issuedAt,
+          expiresAt: res.user.expiresAt,
+        })
+      );
+      return;
+    }
 
-      dispatch(setUserInfo({
-        _id: res.user.userId,
-        role: "Admin", 
-        issuedAt: res.user.issuedAt,
-        expiresAt: res.user.expiresAt,
-      }));
-    } else {
+    if (res?.valid === true || res?.isValid === true || res?.status === "ok") {
+      dispatch(setTokenValid(true));
+      return;
+    }
+
+    if (
+      res?.valid === false ||
+      res?.isValid === false ||
+      res?.status === "invalid" ||
+      res?.error === "invalid_token"
+    ) {
       localStorage.removeItem("token");
       dispatch(setTokenValid(false));
       dispatch(logout());
+      return;
     }
+
+    if (process.env.NODE_ENV === "development") {
+      console.debug("verifyToken: unexpected response shape:", res);
+    }
+    dispatch(setTokenValid(true));
   } catch (err) {
-    localStorage.removeItem("token");
-    dispatch(setTokenValid(false));
-    dispatch(logout());
+    console.error("verifyToken failed:", err);
+    if (err?.response?.status === 401) {
+      localStorage.removeItem("token");
+      dispatch(setTokenValid(false));
+      dispatch(logout());
+    } else {
+      dispatch(setTokenValid(true));
+    }
   }
 };
+
+

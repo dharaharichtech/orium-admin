@@ -44,6 +44,8 @@ const ProductDetails = ({ product }) => {
 
   const prod = productData;
 
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "") || "";
+
   return (
     <div className="min-h-screen  ">
       {/* Header */}
@@ -201,7 +203,8 @@ const ProductDetails = ({ product }) => {
                         className="flex flex-col items-center text-center"
                       >
                         <img
-                          src={cert.certificate_img}
+                          // src={cert.certificate_img}
+                           src={`${apiBase}${cert.certificate_img}`}
                           alt={cert.certificate_title}
                           className="w-32 h-32 rounded-lg object-contain bg-white mb-2"
                         />
@@ -233,7 +236,8 @@ const ProductDetails = ({ product }) => {
                           className="flex flex-col items-center text-center"
                         >
                           <img
-                            src={cert.sdg_img}
+                            // src={cert.sdg_img}
+                             src={`${apiBase}${cert.sdg_img}`}
                             alt={cert.sdg_title}
                             className="w-32 h-32 rounded-lg object-contain bg-white mb-2"
                           />

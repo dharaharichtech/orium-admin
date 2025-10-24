@@ -69,6 +69,8 @@ const OrderDetails = ({ OrderId }) => {
   const order = orderDetail;
   const customer = customerDetail;
 
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL?.replace("/api", "") || "";
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -170,7 +172,8 @@ const OrderDetails = ({ OrderId }) => {
                             <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center">
                               {order.product_id?.images?.length > 0 ? (
                                 <Image
-                                  src={order.product_id.images[0].url}
+                                  // src={order.product_id.images[0].url}
+                                   src={`${apiBase}${order.product_id.images[0].url}`}
                                   alt={order.product_id.title}
                                   width={40}
                                   height={40}
