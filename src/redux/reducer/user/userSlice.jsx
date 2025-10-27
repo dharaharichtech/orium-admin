@@ -93,18 +93,101 @@ export const loginUser = (email, password) => async (dispatch) => {
   }
 };
 
+// export const fetchCustomers =
+//   ({ page = 1, limit = 10, filterBy = "all" }) =>
+//   async (dispatch, getState) => {
+//     try {
+//       dispatch(startLoading());
+//       const data = await getAllUsers();
+//       const usersArray = data.users || data;
+
+//       let sorted = [...usersArray];
+
+//       if (filterBy === "name") {
+//         sorted.sort((a, b) =>
+//           `${a.firstname || ""} ${a.lastname || ""}`
+//             .toLowerCase()
+//             .localeCompare(
+//               `${b.firstname || ""} ${b.lastname || ""}`.toLowerCase()
+//             )
+//         );
+//       } else if (filterBy === "email") {
+//         sorted.sort((a, b) =>
+//           (a.email || "")
+//             .toLowerCase()
+//             .localeCompare((b.email || "").toLowerCase())
+//         );
+//       } else if (filterBy === "date") {
+//         sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
+//       }
+
+//       const start = (page - 1) * limit;
+//       const end = start + limit;
+//       const paginated = sorted.slice(start, end);
+
+//       const currentState = getState();
+//       const existingCustomers = currentState.user.customers || [];
+
+//       const formatted = paginated.map((u) => {
+//         let profileImage = "U";
+//         if (u.profile) {
+//           profileImage = u.profile.startsWith("http")
+//             ? u.profile
+//             : `${process.env.NEXT_PUBLIC_API_BASE_URL}${u.profile}`;
+//         }
+
+//         const existingCustomer = existingCustomers.find((c) => c._id === u._id);
+//         const customerStatus =
+//           existingCustomer?.status ||
+//           (u.isBlocked === 1 ? "Active" : "Blocked");
+
+//         return {
+//           _id: u._id,
+//           uid: u.uid,
+//           name: `${u.firstname || ""} ${u.lastname || ""}`,
+//           email: u.email,
+//           phone: u.phone,
+//           address: `${u.address || ""}, ${u.city || ""}, ${u.state || ""}, ${
+//             u.country || ""
+//           }, ${u.pincode || ""}`,
+//           // status: u.isBlocked === 1 ? "Active" : "Blocked",
+//           status: customerStatus,
+//           added: new Date(u.date).toLocaleDateString("en-GB"),
+//           avatar: profileImage,
+//         };
+//       });
+
+//       dispatch(setCustomers({ users: formatted, total: usersArray.length }));
+//     } catch (err) {
+//       dispatch(setError("Failed to fetch customers"));
+//     }
+//   };
+
+
 export const fetchCustomers =
-  ({ page = 1, limit = 10, filterBy = "all" }) =>
+  ({ page = 1, limit = 10, filterBy = "all", search = "" }) =>
   async (dispatch, getState) => {
     try {
       dispatch(startLoading());
       const data = await getAllUsers();
       const usersArray = data.users || data;
 
-      let sorted = [...usersArray];
+      let filtered = [...usersArray];
+
+      if (search.trim()) {
+        const term = search.toLowerCase();
+        filtered = filtered.filter(
+          (u) =>
+            `${u.firstname || ""} ${u.lastname || ""}`
+              .toLowerCase()
+              .includes(term) ||
+            (u.email || "").toLowerCase().includes(term) ||
+            (u.phone || "").includes(term)
+        );
+      }
 
       if (filterBy === "name") {
-        sorted.sort((a, b) =>
+        filtered.sort((a, b) =>
           `${a.firstname || ""} ${a.lastname || ""}`
             .toLowerCase()
             .localeCompare(
@@ -112,18 +195,18 @@ export const fetchCustomers =
             )
         );
       } else if (filterBy === "email") {
-        sorted.sort((a, b) =>
+        filtered.sort((a, b) =>
           (a.email || "")
             .toLowerCase()
             .localeCompare((b.email || "").toLowerCase())
         );
       } else if (filterBy === "date") {
-        sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
+        filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
       }
 
       const start = (page - 1) * limit;
       const end = start + limit;
-      const paginated = sorted.slice(start, end);
+      const paginated = filtered.slice(start, end);
 
       const currentState = getState();
       const existingCustomers = currentState.user.customers || [];
@@ -150,18 +233,19 @@ export const fetchCustomers =
           address: `${u.address || ""}, ${u.city || ""}, ${u.state || ""}, ${
             u.country || ""
           }, ${u.pincode || ""}`,
-          // status: u.isBlocked === 1 ? "Active" : "Blocked",
           status: customerStatus,
           added: new Date(u.date).toLocaleDateString("en-GB"),
           avatar: profileImage,
         };
       });
 
-      dispatch(setCustomers({ users: formatted, total: usersArray.length }));
+      dispatch(setCustomers({ users: formatted, total: filtered.length }));
     } catch (err) {
       dispatch(setError("Failed to fetch customers"));
     }
   };
+
+
 
 //by id
 

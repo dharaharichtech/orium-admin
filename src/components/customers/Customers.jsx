@@ -31,9 +31,10 @@ const Customers = () => {
   const { customers, loading, total } = useSelector((state) => state.user);
   const [filterBy, setFilterBy] = useState("all");
 
-  useEffect(() => {
-    dispatch(fetchCustomers({ page, limit, search, filterBy }));
-  }, [page, search, filterBy, dispatch]);
+ useEffect(() => {
+  dispatch(fetchCustomers({ page, limit, filterBy, search }));
+}, [page, limit, filterBy, search, dispatch]);
+
 
   const handleSelectAll = () => {
     if (selectAll) {
