@@ -1,4 +1,5 @@
 import baseApi from "./baseApi";
+import axios from "axios";
 
 export const getAllUsers = async () => {
   try {
@@ -57,6 +58,7 @@ export const verifyTokenApi = async (token) => {
     );
     return res.data;
   } catch (err) {
-    return { valid: false };
+    console.error("verifyTokenApi failed:", err?.response?.data || err.message);
+    throw err; 
   }
 };

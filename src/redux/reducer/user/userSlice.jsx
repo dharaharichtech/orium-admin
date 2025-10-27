@@ -234,10 +234,10 @@ export const verifyToken = () => async (dispatch) => {
     }
 
     if (
-      res?.valid === false ||
-      res?.isValid === false ||
-      res?.status === "invalid" ||
-      res?.error === "invalid_token"
+       res?.valid === false ||
+  res?.isValid === false ||
+  res?.status === "invalid" ||
+  res?.error === "invalid_token"
     ) {
       localStorage.removeItem("token");
       dispatch(setTokenValid(false));

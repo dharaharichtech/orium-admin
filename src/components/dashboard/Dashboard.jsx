@@ -37,6 +37,12 @@ useEffect(() => {
   }
 }, []);
 
+useEffect(() => {
+  if (!token) {
+    router.replace("/login");
+  }
+}, [token]);
+
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -144,7 +150,7 @@ useEffect(() => {
                 {/* Avatar */}
                 <div
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className="w-10 h-10 bg-gradient-to-r from-orange-400 to-pink-500 rounded-full flex items-center justify-center cursor-pointer"
+                  className="w-10 h-10 bg-gradient-to-r from-sidebar-gradient-start to-sidebar-gradient-end text-white rounded-full flex items-center justify-center cursor-pointer"
                 >
                   <span className="text-white font-semibold text-sm">
                     {userInfo?.firstname?.[0] || "A"}
@@ -171,16 +177,16 @@ useEffect(() => {
                       </p>
                     </div>
 
-                    <button
+                    {/* <button
                       onClick={() => router.push("/profile")}
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                     >
                       View Profile
-                    </button>
+                    </button> */}
 
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 rounded-b-xl"
+                      className="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-gray-50 rounded-b-xl"
                     >
                       Logout
                     </button>
